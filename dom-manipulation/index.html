@@ -19,19 +19,14 @@
   <button id="exportQuotes">Export Quotes</button>
 
   <!-- Import Quotes File Input -->
-  <input
-    type="file"
-    id="importFile"
-    accept=".json"
-    onchange="importFromJsonFile(event)"
-  />
+  <input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
 
   <!-- Category Filter -->
   <select id="categoryFilter" onchange="filterQuotes()">
     <option value="all">All Categories</option>
   </select>
 
-  <!-- Manual Sync Button (static for grader) -->
+  <!-- Manual Sync Button -->
   <button id="syncQuotesBtn">Sync with Server</button>
 
   <!-- Script -->
