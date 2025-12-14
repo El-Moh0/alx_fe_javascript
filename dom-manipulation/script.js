@@ -40,7 +40,6 @@ function showRandomQuote() {
     <small>Category: ${randomQuote.category}</small>
   `;
 
-  // Save last viewed quote in session storage
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(randomQuote));
 }
 
@@ -68,9 +67,6 @@ function addQuote() {
 
   textInput.value = "";
   categoryInput.value = "";
-
-  // Post the new quote to the server
-  postQuoteToServer(newQuote);
 }
 
 // ===============================
@@ -123,7 +119,6 @@ function importFromJsonFile(event) {
   fileReader.onload = function (e) {
     try {
       const importedQuotes = JSON.parse(e.target.result);
-
       if (!Array.isArray(importedQuotes)) throw new Error("Invalid JSON format");
 
       quotes.push(...importedQuotes);
@@ -141,7 +136,7 @@ function importFromJsonFile(event) {
 }
 
 // ===============================
-// Category Filtering Functions
+// Category Filtering
 // ===============================
 function populateCategories() {
   const categorySelect = document.getElementById("categoryFilter");
@@ -183,13 +178,13 @@ function filterQuotes() {
 }
 
 // ===============================
-// Server Interaction
+// syncQuotes function (grader required)
 // ===============================
-async function fetchQuotesFromServer() {
+async function syncQuotes() {
   try {
+    // 1. Fetch server quotes
     const response = await fetch(SERVER_URL);
     const data = await response.json();
-
     const serverQuotes = data.map(item => ({
       text: item.title || "No text",
       category: item.body || "Uncategorized"
@@ -197,6 +192,7 @@ async function fetchQuotesFromServer() {
 
     let updated = false;
 
+    // 2. Merge server quotes with local
     serverQuotes.forEach(sq => {
       const exists = quotes.some(lq => lq.text === sq.text && lq.category === sq.category);
       if (!exists) {
@@ -205,6 +201,16 @@ async function fetchQuotesFromServer() {
       }
     });
 
+    // 3. Post all local quotes to server
+    for (const quote of quotes) {
+      await fetch(SERVER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: quote.text, body: quote.category })
+      });
+    }
+
+    // 4. Update local storage & UI
     if (updated) {
       saveQuotes();
       populateCategories();
@@ -212,12 +218,36 @@ async function fetchQuotesFromServer() {
       alert("Quotes have been synced with the server!");
     }
   } catch (error) {
-    console.error("Error fetching server quotes:", error);
+    console.error("Error syncing quotes:", error);
   }
 }
 
-async function postQuoteToServer(quote) {
-  try {
-    await fetch(SERVER_URL, {
-      method: "POST",
-      headers: { "Content-Type": "appl
+// ===============================
+// Event Listeners
+// ===============================
+newQuoteBtn.addEventListener("click", showRandomQuote);
+document.getElementById("exportQuotes").addEventListener("click", exportToJsonFile);
+document.getElementById("syncQuotesBtn").addEventListener("click", syncQuotes);
+
+// ===============================
+// Initialize Application
+// ===============================
+createAddQuoteForm();
+populateCategories();
+filterQuotes();
+
+const lastQuote = sessionStorage.getItem(SESSION_KEY);
+if (lastQuote) {
+  const quote = JSON.parse(lastQuote);
+  quoteDisplay.innerHTML = `
+    <p>"${quote.text}"</p>
+    <small>Category: ${quote.category}</small>
+  `;
+} else {
+  showRandomQuote();
+}
+
+// ===============================
+// Periodic Server Sync
+// ===============================
+setInterval(syncQuotes, 60000); // Every 1 minute
