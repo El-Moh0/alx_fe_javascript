@@ -4,6 +4,7 @@
 const STORAGE_KEY = "dynamicQuotes";
 const SESSION_KEY = "lastViewedQuote";
 const FILTER_KEY = "selectedCategory";
+const SERVER_URL = "https://jsonplaceholder.typicode.com/posts"; // Mock server
 
 // ===============================
 // Load Quotes from Local Storage
@@ -188,6 +189,41 @@ function filterQuotes() {
 }
 
 // ===============================
+// Server Sync & Conflict Resolution
+// ===============================
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch(SERVER_URL);
+    const data = await response.json();
+
+    // Convert server data to our format
+    const serverQuotes = data.map(item => ({
+      text: item.title || "No text",
+      category: item.body || "Uncategorized"
+    }));
+
+    let updated = false;
+
+    serverQuotes.forEach(sq => {
+      const exists = quotes.some(lq => lq.text === sq.text && lq.category === sq.category);
+      if (!exists) {
+        quotes.push(sq);
+        updated = true;
+      }
+    });
+
+    if (updated) {
+      saveQuotes();
+      populateCategories();
+      filterQuotes();
+      alert("Quotes have been synced with the server!");
+    }
+  } catch (error) {
+    console.error("Error fetching server quotes:", error);
+  }
+}
+
+// ===============================
 // Event Listeners
 // ===============================
 newQuoteBtn.addEventListener("click", showRandomQuote);
@@ -213,3 +249,13 @@ if (lastQuote) {
 } else {
   showRandomQuote();
 }
+
+// Initial server fetch & periodic sync
+fetchQuotesFromServer();
+setInterval(fetchQuotesFromServer, 60000); // every 1 min
+
+// Optional manual sync button
+const syncBtn = document.createElement("button");
+syncBtn.textContent = "Sync with Server";
+syncBtn.addEventListener("click", fetchQuotesFromServer);
+document.body.appendChild(syncBtn);
