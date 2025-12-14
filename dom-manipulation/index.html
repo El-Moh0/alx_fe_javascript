@@ -15,10 +15,10 @@
   <!-- Show Random Quote -->
   <button id="newQuote">Show New Quote</button>
 
-  <!-- Export Quotes Button (REQUIRED BY CHECKER) -->
+  <!-- Export Quotes Button -->
   <button id="exportQuotes">Export Quotes</button>
 
-  <!-- Import Quotes File Input (REQUIRED BY CHECKER) -->
+  <!-- Import Quotes File Input -->
   <input
     type="file"
     id="importFile"
@@ -26,8 +26,12 @@
     onchange="importFromJsonFile(event)"
   />
 
-  <!-- JavaScript -->
-  <script src="script.js"></script>
+  <!-- Category Filter -->
+  <select id="categoryFilter" onchange="filterQuotes()">
+    <option value="all">All Categories</option>
+  </select>
 
+  <!-- Script -->
+  <script src="script.js"></script>
 </body>
 </html>
